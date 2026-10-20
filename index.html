@@ -15,7 +15,7 @@ let pages;
 const routes=[["쇼핑몰 분석","index.html"],["인스타그램","instagram/index.html"],["클래스","instagram/class.html"],["이벤트","instagram/event.html"],["콘텐츠","instagram/content.html"],["고객의 소리","instagram/voc.html"],["브랜드","brand/index.html"]];
 function show(route){
  if(!pages[route])return;
- const bridge=`<script>document.addEventListener("click",event=>{const a=event.target.closest("a");if(!a)return;const href=a.getAttribute("href");if(!href||href.startsWith("#")||/^(https?:|mailto:|tel:)/.test(href))return;const target=new URL(href,"https://internal.invalid/"+${JSON.stringify(route)}).pathname.slice(1);event.preventDefault();parent.postMessage({kind:"foret-route",route:target},location.origin);});<\/script>`;
+ const bridge=`<script>document.addEventListener("click",event=>{const a=event.target.closest("a");if(!a)return;const href=a.getAttribute("href");if(!href||href.startsWith("#")||/^(https?:|mailto:|tel:)/.test(href))return;const target=new URL(href,"https://internal.invalid/"+${JSON.stringify(route)}).pathname.slice(1);event.preventDefault();parent.postMessage({kind:"foret-route",route:target},${JSON.stringify(location.origin)});});<\/script>`;
  screen.srcdoc=pages[route].replace("</body>",bridge+"</body>");
 }
 window.addEventListener("message",event=>{if(event.source===screen.contentWindow&&event.data?.kind==="foret-route")show(event.data.route);});
