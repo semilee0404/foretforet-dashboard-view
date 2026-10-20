@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>포레포레 · 내부 대시보드</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#faf9f6;color:#171812;font:16px system-ui,sans-serif}form{width:min(400px,calc(100% - 40px));margin:18vh auto;padding:32px;background:white;border:1px solid #deded6;border-radius:16px}h1{font-size:24px}label{display:block;margin:24px 0 8px}input,button{font:inherit;padding:12px;border:1px solid #bdbfb5;border-radius:8px}input{width:100%}button{cursor:pointer;background:#171812;color:white;margin-top:12px}#message{min-height:24px;color:#8c2222}nav{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;border-bottom:1px solid #ddd;background:white}nav button{margin:0;font-size:14px;padding:8px 12px}iframe{display:block;width:100%;height:calc(100dvh - 64px);border:0;background:white}[hidden]{display:none!important}
+</style>
+<form id="login"><h1>포레포레 데이터</h1><p>내부 검토용 대시보드입니다.</p><label for="password">비밀번호</label><input id="password" type="password" required autocomplete="current-password"><button id="unlock">열기</button><p id="message" role="status"></p></form>
+<section id="workspace" hidden><nav id="navigation"></nav><iframe id="screen" title="대시보드 화면"></iframe></section>
+<script type="module">
+const form=document.querySelector("#login"),screen=document.querySelector("#screen"),message=document.querySelector("#message");
+let pages;
+const routes=[["쇼핑몰 분석","index.html"],["인스타그램","instagram/index.html"],["클래스","instagram/class.html"],["이벤트","instagram/event.html"],["콘텐츠","instagram/content.html"],["고객의 소리","instagram/voc.html"],["브랜드","brand/index.html"]];
+function show(route){
+ if(!pages[route])return;
+ const bridge=`<script>document.addEventListener("click",event=>{const a=event.target.closest("a");if(!a)return;const href=a.getAttribute("href");if(!href||href.startsWith("#")||/^(https?:|mailto:|tel:)/.test(href))return;const target=new URL(href,"https://internal.invalid/"+${JSON.stringify(route)}).pathname.slice(1);event.preventDefault();parent.postMessage({kind:"foret-route",route:target},location.origin);});<\/script>`;
+ screen.srcdoc=pages[route].replace("</body>",bridge+"</body>");
+}
+window.addEventListener("message",event=>{if(event.source===screen.contentWindow&&event.data?.kind==="foret-route")show(event.data.route);});
+for(const [label,route]of routes){const button=document.createElement("button");button.textContent=label;button.onclick=()=>show(route);document.querySelector("#navigation").append(button);}
+form.onsubmit=async event=>{
+ event.preventDefault();document.querySelector("#unlock").disabled=true;message.textContent="화면을 여는 중입니다.";
+ try{
+  const payload=await fetch("./payload.json").then(r=>{if(!r.ok)throw Error("payload");return r.json();});
+  const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  const material=await crypto.subtle.importKey("raw",new TextEncoder().encode(document.querySelector("#password").value),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:bytes(payload.salt),iterations:600000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const packed=await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes(payload.iv)},key,bytes(payload.cipher));
+  pages=JSON.parse(await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
+  document.querySelector("#password").value="";form.hidden=true;document.querySelector("#workspace").hidden=false;show("index.html");
+ }catch{message.textContent="비밀번호가 맞지 않거나 화면을 불러오지 못했습니다.";}
+ finally{document.querySelector("#unlock").disabled=false;}
+};
+</script>
+</html>
