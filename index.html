@@ -29,7 +29,7 @@ form.onsubmit=async event=>{
   const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:bytes(payload.salt),iterations:600000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["decrypt"]);
   const packed=await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes(payload.iv)},key,bytes(payload.cipher));
   pages=JSON.parse(await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
-  document.querySelector("#password").value="";form.hidden=true;document.querySelector("#workspace").hidden=false;show("index.html");
+  document.querySelector("#password").value="";form.hidden=true;document.querySelector("#workspace").hidden=false;show("instagram/index.html");
  }catch{message.textContent="비밀번호가 맞지 않거나 화면을 불러오지 못했습니다.";}
  finally{document.querySelector("#unlock").disabled=false;}
 };
