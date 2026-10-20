@@ -19,7 +19,7 @@ function show(route){
  screen.srcdoc=pages[route].replace("</body>",bridge+"</body>");
 }
 window.addEventListener("message",event=>{if(event.source===screen.contentWindow&&event.data?.kind==="foret-route")show(event.data.route);});
-for(const [label,route]of routes){const button=document.createElement("button");button.textContent=label;button.onclick=()=>show(route);document.querySelector("#navigation").append(button);}
+for(const [label,route]of routes){const button=document.createElement("button");button.textContent=label;button.onclick=()=>route==="index.html"?window.open("https://app.finallydata.com/app?site=aggyxwrk7t3fufam&tab=analytics&src=channel&pg=host&fn=period","_blank","noopener,noreferrer"):show(route);document.querySelector("#navigation").append(button);}
 form.onsubmit=async event=>{
  event.preventDefault();document.querySelector("#unlock").disabled=true;message.textContent="화면을 여는 중입니다.";
  try{
